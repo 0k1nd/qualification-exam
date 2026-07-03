@@ -2,11 +2,15 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+
+  <!-- Нужен для адаптивности: без него сайт плохо масштабируется на телефонах -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>WebInspector — Анализатор сайтов</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Декоративные размытые пятна на фоне. Они не влияют на работу приложения -->
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
 
@@ -28,6 +32,7 @@
     </header>
 
     <main>
+      <!-- Главный экран: описание сервиса и форма ввода URL -->
       <section class="hero-card">
         <div class="hero-content">
           <div class="eyebrow">Анализ сайта за несколько секунд</div>
@@ -45,12 +50,14 @@
 
           <div class="status-line" id="message">Попробуйте: https://example.com</div>
 
+          <!-- Спиннер показывается только во время анализа -->
           <div class="loader" id="loader" aria-live="polite">
             <span class="spinner"></span>
             <span>Идет анализ сайта...</span>
           </div>
         </div>
 
+        <!-- Декоративный mockup телефона в стиле Apple -->
         <div class="hero-visual" aria-hidden="true">
           <div class="phone-card">
             <div class="phone-top"></div>
@@ -68,6 +75,7 @@
       </section>
 
       <section class="workspace">
+        <!-- iframe нужен только для визуального предпросмотра сайта -->
         <section class="panel preview-panel">
           <div class="panel-head">
             <div>
@@ -88,6 +96,7 @@
           </div>
         </section>
 
+        <!-- История проверок сохраняется в localStorage браузера -->
         <aside class="panel history-panel">
           <div class="panel-head compact">
             <div>
@@ -101,6 +110,7 @@
         </aside>
       </section>
 
+      <!-- Отчет скрыт до первой проверки и показывается через класс visible -->
       <section class="panel report-panel" id="report">
         <div class="panel-head">
           <div>

@@ -67,6 +67,11 @@ clearHistoryBtn.addEventListener('click', function () {
   showMessage('История проверок очищена.', false);
 });
 
+/*
+  Функция приводит введенный адрес к нормальному виду.
+  Пользователь может написать example.com, а приложение само добавит https://.
+  Проверка через new URL нужна, чтобы отсеять неправильные адреса.
+*/
 function normalizeUrl(value) {
   const trimmed = value.trim();
 
@@ -88,6 +93,11 @@ function normalizeUrl(value) {
   return url.href;
 }
 
+/*
+  Главная функция анализа.
+  Она показывает загрузку, вставляет сайт в iframe для просмотра,
+  получает HTML через прокси и затем запускает разбор страницы.
+*/
 async function runAnalysis(url) {
   setLoading(true);
   showMessage('Получаем HTML страницы и собираем метрики...', false);
@@ -118,6 +128,11 @@ async function runAnalysis(url) {
   }
 }
 
+/*
+  Прямой fetch чужого сайта часто блокируется из-за CORS.
+  Поэтому используется бесплатный прокси AllOrigins.
+  Это позволяет получить HTML публичной страницы и разобрать его.
+*/
 async function loadHtml(url) {
   const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
   const response = await fetch(proxyUrl);
@@ -135,6 +150,10 @@ async function loadHtml(url) {
   return text;
 }
 
+/*
+  DOMParser превращает строку HTML в документ.
+  После этого можно искать title, meta, h1, h2, img, a обычными querySelector.
+*/
 function analyzeHtml(url, html, loadTime) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const parsedUrl = new URL(url);
@@ -175,6 +194,11 @@ function getMeta(doc, name) {
   return meta ? meta.getAttribute('content')?.trim() || '' : '';
 }
 
+/*
+  Здесь находится основная логика рекомендаций.
+  Каждое правило проверяет одну метрику и добавляет карточку:
+  critical — ошибка, warning — предупреждение, success — успешная проверка.
+*/
 function buildRecommendations(metrics) {
   const items = [];
 
@@ -268,6 +292,10 @@ function countItems(items) {
   };
 }
 
+/*
+  Отчет создается через document.createElement и textContent.
+  Это безопаснее, чем innerHTML, потому что данные сайта не вставляются как HTML-код.
+*/
 function renderReport(result) {
   cards.textContent = '';
   summary.textContent = '';
@@ -332,6 +360,11 @@ function createSummaryPill(text) {
   summary.append(pill);
 }
 
+/*
+  История хранится в localStorage.
+  Перед сохранением удаляется старая проверка такого же URL,
+  чтобы в истории не появлялись дубликаты.
+*/
 function saveToHistory(result) {
   const history = getHistory();
   const withoutDuplicate = history.filter(item => item.metrics.url !== result.metrics.url);
@@ -387,6 +420,10 @@ function renderHistory() {
   });
 }
 
+/*
+  Текстовый отчет нужен для кнопки "Копировать".
+  Он собирается из тех же данных, что и карточки на странице.
+*/
 function buildTextReport(result) {
   const lines = [
     'WEBINSPECTOR — ОТЧЕТ ПРОВЕРКИ',
