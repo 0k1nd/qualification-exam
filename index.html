@@ -26,8 +26,6 @@
 
       <nav class="top-actions" aria-label="Действия">
         <button class="ghost-btn" id="themeBtn" type="button">Тема</button>
-        <button class="ghost-btn" id="copyBtn" type="button">Копировать</button>
-        <button class="ghost-btn" id="printBtn" type="button">PDF</button>
       </nav>
     </header>
 
@@ -92,7 +90,7 @@
               <span></span>
               <p id="browserUrl">URL появится после проверки</p>
             </div>
-            <iframe id="siteFrame" title="Предпросмотр сайта"></iframe>
+            <iframe id="siteFrame" title="Предпросмотр сайта" referrerpolicy="no-referrer"></iframe>
           </div>
         </section>
 
@@ -112,14 +110,19 @@
 
       <!-- Отчет скрыт до первой проверки и показывается через класс visible -->
       <section class="panel report-panel" id="report">
-        <div class="panel-head">
+        <div class="panel-head report-head">
           <div>
             <span class="section-label">Report</span>
             <h2>Отчет проверки</h2>
           </div>
-          <div class="summary" id="summary"></div>
+
+          <div class="report-actions">
+            <button class="ghost-btn" id="copyBtn" type="button">Копировать отчет</button>
+            <button class="ghost-btn" id="printBtn" type="button">PDF / печать</button>
+          </div>
         </div>
 
+        <div class="summary" id="summary"></div>
         <div class="cards" id="cards"></div>
       </section>
     </main>

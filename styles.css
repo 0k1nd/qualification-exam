@@ -590,11 +590,23 @@ iframe {
   display: block;
 }
 
+.report-head {
+  align-items: center;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .summary {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+  padding: 16px 24px 0;
 }
 
 .summary-pill {
@@ -773,7 +785,7 @@ iframe {
 
   .top-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .ghost-btn {
@@ -826,12 +838,22 @@ iframe {
     height: 290px;
   }
 
+  .report-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .report-actions .ghost-btn {
+    width: 100%;
+  }
+
   .cards {
     padding: 18px;
   }
 
   .summary {
     justify-content: flex-start;
+    padding: 16px 18px 0;
   }
 }
 
@@ -846,7 +868,8 @@ iframe {
   .hero-card,
   .preview-panel,
   .history-panel,
-  .details-btn {
+  .details-btn,
+  .report-actions {
     display: none !important;
   }
 

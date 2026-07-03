@@ -102,9 +102,10 @@ async function runAnalysis(url) {
   setLoading(true);
   showMessage('Получаем HTML страницы и собираем метрики...', false);
 
-  siteFrame.src = url;
   previewStatus.textContent = 'загрузка';
   browserUrl.textContent = url;
+  siteFrame.removeAttribute('src');
+  siteFrame.srcdoc = createPreviewMessage('Загружаем предпросмотр сайта...');
 
   const start = performance.now();
 
@@ -112,6 +113,8 @@ async function runAnalysis(url) {
     const html = await loadHtml(url);
     const loadTime = ((performance.now() - start) / 1000).toFixed(2);
     const result = analyzeHtml(url, html, loadTime);
+
+    siteFrame.srcdoc = buildPreviewHtml(url, html);
 
     currentResult = result;
     renderReport(result);
@@ -122,6 +125,7 @@ async function runAnalysis(url) {
     showMessage('Анализ завершен.', false);
   } catch (error) {
     previewStatus.textContent = 'ограничено';
+    siteFrame.srcdoc = createPreviewMessage('Не удалось загрузить предпросмотр. Некоторые сайты блокируют получение HTML или работу через прокси.');
     showMessage('Не удалось получить HTML сайта: ' + error.message, true);
   } finally {
     setLoading(false);
@@ -134,20 +138,39 @@ async function runAnalysis(url) {
   Это позволяет получить HTML публичной страницы и разобрать его.
 */
 async function loadHtml(url) {
-  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-  const response = await fetch(proxyUrl);
+  const rawProxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  const jsonProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
 
-  if (!response.ok) {
-    throw new Error('ошибка запроса ' + response.status);
+  try {
+    const response = await fetch(rawProxy);
+
+    if (!response.ok) {
+      throw new Error('ошибка запроса ' + response.status);
+    }
+
+    const text = await response.text();
+
+    if (!text || text.trim().length < 20) {
+      throw new Error('получен пустой ответ');
+    }
+
+    return text;
+  } catch (firstError) {
+    const response = await fetch(jsonProxy);
+
+    if (!response.ok) {
+      throw new Error('ошибка запроса ' + response.status);
+    }
+
+    const data = await response.json();
+    const text = data.contents || '';
+
+    if (!text || text.trim().length < 20) {
+      throw new Error('получен пустой ответ');
+    }
+
+    return text;
   }
-
-  const text = await response.text();
-
-  if (!text || text.trim().length < 20) {
-    throw new Error('получен пустой ответ');
-  }
-
-  return text;
 }
 
 /*
@@ -192,6 +215,91 @@ function getTitle(doc) {
 function getMeta(doc, name) {
   const meta = doc.querySelector('meta[name="' + name + '"]');
   return meta ? meta.getAttribute('content')?.trim() || '' : '';
+}
+
+/*
+  Предпросмотр строится через srcdoc.
+  Это нужно потому, что многие сайты запрещают прямое открытие в iframe.
+  base href помогает относительным ссылкам, картинкам и стилям правильно находить путь.
+*/
+function buildPreviewHtml(url, html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  doc.querySelectorAll('script').forEach(function (script) {
+    script.remove();
+  });
+
+  if (!doc.head) {
+    const head = doc.createElement('head');
+    doc.documentElement.prepend(head);
+  }
+
+  const base = doc.createElement('base');
+  base.href = url;
+  doc.head.prepend(base);
+
+  const style = doc.createElement('style');
+  style.textContent = `
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    img, video, canvas, svg {
+      max-width: 100%;
+      height: auto;
+    }
+  `;
+
+  doc.head.append(style);
+
+  return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+}
+
+function createPreviewMessage(text) {
+  return `
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: grid;
+          place-items: center;
+          background: #ffffff;
+          color: #6e6e73;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          text-align: center;
+        }
+
+        div {
+          max-width: 420px;
+          padding: 24px;
+          line-height: 1.5;
+        }
+
+        strong {
+          display: block;
+          margin-bottom: 8px;
+          color: #1d1d1f;
+          font-size: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div>
+        <strong>Предпросмотр</strong>
+        ${text}
+      </div>
+    </body>
+    </html>
+  `;
 }
 
 /*
@@ -409,7 +517,7 @@ function renderHistory() {
 
     button.addEventListener('click', function () {
       currentResult = item;
-      siteFrame.src = item.metrics.url;
+      siteFrame.srcdoc = buildPreviewHtml(item.metrics.url, item.html || createPreviewMessage('HTML старой проверки недоступен. Выполните анализ заново.'));
       browserUrl.textContent = item.metrics.url;
       previewStatus.textContent = 'из истории';
       renderReport(item);
